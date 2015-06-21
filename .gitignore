@@ -25,3 +25,9 @@ proguard/
 
 # Log Files
 *.log
+
+
+/local.properties
+.DS_Store
+/captures
+
