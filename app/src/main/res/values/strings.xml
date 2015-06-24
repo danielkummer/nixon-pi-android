@@ -1,5 +1,18 @@
 <resources>
     <string name="app_name">NixonPi</string>
+
     <string name="action_settings">Settings</string>
-    <string name="refresh">Refresh</string>
+    <string name="action_save">Save</string>
+    <string name="action_refresh">Refresh</string>
+
+    <string name="power_text">Power</string>
+    <string name="tubes_text">Tubes</string>
+    <string name="tube_edit_text_hint">Tube Numbers</string>
+    <string name="lamps_text">Lamps</string>
+    <string name="text_background">Background Light</string>
+    <string name="bars_text">Bars</string>
+    <string name="ambient_light_text">Ambient Light</string>
+
+    <string name="title_activity_settings">Settings</string>
+    <string name="server_edit_text_hint">Enter API Endpoint IP or domain name</string>
 </resources>

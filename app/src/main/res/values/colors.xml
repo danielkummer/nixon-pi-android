@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#FF0000</color>
-    <color name="primary_dark">#00FF00</color>
-    <color name="accent">#0000FF</color>
+    <color name="primary">#f03737</color>
+    <color name="primary_dark">#ff6e1b1b</color>
+    <color name="accent">#ffff7504</color>
 
     <color name = "hairlines">#C0C0C0</color>
 </resources>
