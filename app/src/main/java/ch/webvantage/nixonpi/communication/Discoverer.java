@@ -31,7 +31,8 @@ public class Discoverer extends Thread {
     private static final int TIMEOUT_MS = 500;
     private static final String TAG = Discoverer.class.getName();
     private static final int DISCOVERY_PORT = 1234;
-    private static final String TAG_ADDRESSES = "addresses";
+    private static final int REPLY_PORT = 1234;
+    private static final String TAG_ADDRESSES = "ip_addresses";
     private static final String TAG_PORT = "port";
 
     private WifiManager wifi;
@@ -43,12 +44,17 @@ public class Discoverer extends Thread {
     public void run() {
         List<NixonpiServer> servers = new ArrayList<>();
         try {
-            DatagramSocket socket = new DatagramSocket(DISCOVERY_PORT);
+            //DatagramSocket socket = new DatagramSocket(DISCOVERY_PORT);
+            DatagramSocket socket = new DatagramSocket();
             socket.setBroadcast(true);
             socket.setSoTimeout(TIMEOUT_MS);
 
             sendDiscoveryRequest(socket);
-            servers = listenForResponses(socket);
+
+            DatagramSocket responseSocket = new DatagramSocket(REPLY_PORT, InetAddress.getByName("0.0.0.0"));
+            responseSocket.setBroadcast(true);
+
+            servers = listenForResponses(responseSocket);
             socket.close();
         } catch (IOException e) {
             Log.e(TAG, "Could not send discovery request", e);
@@ -66,10 +72,12 @@ public class Discoverer extends Thread {
      * @throws IOException
      */
     private void sendDiscoveryRequest(DatagramSocket socket) throws IOException {
-        String data = String.format("{ cmd:\"%s\", application:\"nixonpi\" }", "discover");
+        String data = String.format("{ \"cmd\":\"%s\", \"application\":\"nixonpi\", \"reply_port\":\"%d\" }", "discover", REPLY_PORT);
         Log.d(TAG, "Sending data " + data);
         DatagramPacket packet = new DatagramPacket(data.getBytes(), data.length(), getBroadcastAddress(), DISCOVERY_PORT);
         socket.send(packet);
+        Log.d(TAG, "Broadcast packet sent to: " + getBroadcastAddress().getHostAddress());
+
     }
 
     /**
@@ -117,6 +125,15 @@ public class Discoverer extends Thread {
                 if (server != null) {
                     servers.add(server);
                 }
+                /*
+                // Send the packet data back to the UI thread
+    Intent localIntent = new Intent(Constants.BROADCAST_ACTION)
+            // Puts the data into the Intent
+            .putExtra(Constants.EXTENDED_DATA_STATUS, data);
+    // Broadcasts the Intent to receivers in this app.
+    LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
+                 */
+
             }
         } catch (SocketTimeoutException e) {
             Log.d(TAG, "Receive timed out");

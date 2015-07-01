@@ -79,28 +79,28 @@
 
                 <ToggleButton
                     android:id="@+id/toggleButtonLamp0"
-                    android:layout_width="wrap_content"
+                    android:layout_width="@dimen/toggle_btn_lamp_width"
                     android:layout_height="wrap_content" />
 
                 <ToggleButton
                     android:id="@+id/toggleButtonLamp1"
-                    android:layout_width="wrap_content"
+                    android:layout_width="@dimen/toggle_btn_lamp_width"
                     android:layout_height="wrap_content" />
 
                 <ToggleButton
                     android:id="@+id/toggleButtonLamp2"
-                    android:layout_width="wrap_content"
+                    android:layout_width="@dimen/toggle_btn_lamp_width"
                     android:layout_height="wrap_content" />
 
                 <ToggleButton
                     android:id="@+id/toggleButtonLamp3"
-                    android:layout_width="wrap_content"
+                    android:layout_width="@dimen/toggle_btn_lamp_width"
                     android:layout_height="wrap_content" />
 
                 <!-- TODO not visible! -->
                 <ToggleButton
                     android:id="@+id/toggleButtonLamp4"
-                    android:layout_width="wrap_content"
+                    android:layout_width="@dimen/toggle_btn_lamp_width"
                     android:layout_height="wrap_content" />
             </LinearLayout>
 

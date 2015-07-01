@@ -1,6 +1,9 @@
 package ch.webvantage.nixonpi;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -24,6 +27,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getName();
 
 
+    Dialog alertDialog = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
         EventBus.getDefault().register(this); // register EventBus
 
         new Discoverer((WifiManager) getSystemService(Context.WIFI_SERVICE)).start();
+
+
 
         /*Log.d(TAG, "Fetching power value");
         PowerService powerService = new RestAdapter.Builder()
@@ -71,18 +78,53 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // This method will be called when a MessageEvent is posted
-    public void onEventMainThread(DiscoveryEvent event){
+    public void onEventMainThread(DiscoveryEvent event) {
         Toast.makeText(this, event.getServers().toString(), Toast.LENGTH_SHORT).show();
     }
 
     // method that will be called when someone posts an event NetworkStateChanged
     public void onEventMainThread(NetworkStateChangedEvent event) {
         if (!event.isInternetConnected()) {
-            Toast.makeText(this, "No Internet connection!", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this, "No Internet connection!", Toast.LENGTH_SHORT).show();
+            alertDialog = createDialog("No Internet connection, please check...");
+            alertDialog.show();
+        } else if (!event.isWifi()) {
+            //Toast.makeText(this, "No WIFI connection!", Toast.LENGTH_SHORT).show();
+            alertDialog = createDialog("No WIFI connection, please enable WIFI...");
+            alertDialog.show();
+        } else {
+            alertDialog.cancel();
         }
-        if (!event.isWifi()) {
-            Toast.makeText(this, "No WIFI connection!", Toast.LENGTH_SHORT).show();
-        }
+    }
+
+
+    private AlertDialog createDialog(String message) {
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setTitle("Oops");
+
+        // set dialog message
+        alertDialogBuilder
+                .setMessage(message)
+                .setCancelable(false)
+                .setPositiveButton("Open Settings", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        // if this button is clicked, close
+                        // current activity
+                        //MainActivity.this.finish();
+                        Intent intent = new Intent(Intent.ACTION_MAIN);
+                        intent.setClassName("com.android.phone", "com.android.phone.NetworkSetting");
+                        startActivity(intent);
+                    }
+                });/*
+                .setNegativeButton("No",new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog,int id) {
+                        // if this button is clicked, just close
+                        // the dialog box and do nothing
+                        dialog.cancel();
+                    }
+                });*/
+
+        return alertDialogBuilder.create();
     }
 
 
