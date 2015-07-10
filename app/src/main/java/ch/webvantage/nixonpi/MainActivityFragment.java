@@ -1,6 +1,11 @@
 package ch.webvantage.nixonpi;
 
-import android.app.Fragment;
+
+import android.support.v4.app.Fragment;
+import android.support.v4.view.ViewPager;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.text.Editable;
 import android.util.Log;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -16,15 +21,14 @@ import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.CheckedChange;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.SeekBarProgressChange;
-import org.androidannotations.annotations.TextChange;
 import org.androidannotations.annotations.ViewById;
 
 import ch.webvantage.nixonpi.communication.AmbientService;
 import ch.webvantage.nixonpi.communication.BackgroundService;
 import ch.webvantage.nixonpi.communication.BarsService;
 import ch.webvantage.nixonpi.communication.LampService;
-import ch.webvantage.nixonpi.communication.RestUtil;
 import ch.webvantage.nixonpi.communication.PowerService;
+import ch.webvantage.nixonpi.communication.RestUtil;
 import ch.webvantage.nixonpi.communication.TubesService;
 import ch.webvantage.nixonpi.communication.model.AmbientColor;
 import ch.webvantage.nixonpi.communication.model.Background;
@@ -33,6 +37,7 @@ import ch.webvantage.nixonpi.communication.model.Lamp;
 import ch.webvantage.nixonpi.communication.model.Power;
 import ch.webvantage.nixonpi.communication.model.Tubes;
 import ch.webvantage.nixonpi.event.DiscoveryEvent;
+import ch.webvantage.nixonpi.ui.widget.SlidingTabLayout;
 import de.greenrobot.event.EventBus;
 import hugo.weaving.DebugLog;
 
@@ -40,6 +45,7 @@ import hugo.weaving.DebugLog;
 /**
  * A placeholder fragment containing a simple view.
  */
+//http://www.exoguru.com/android/material-design/navigation/android-sliding-tabs-with-material-design.html
 @EFragment(R.layout.fragment_main)
 public class MainActivityFragment extends Fragment implements ColorMixer.OnColorChangedListener {
 
@@ -87,9 +93,16 @@ public class MainActivityFragment extends Fragment implements ColorMixer.OnColor
     @ViewById
     ColorMixer mixerAmbientLight;
 
-
     @Bean
     RestUtil restUtil;
+
+
+    Toolbar toolbar;
+    ViewPager pager;
+    ViewPagerAdapter adapter;
+    SlidingTabLayout tabs;
+    CharSequence Titles[]={"Home","Events"};
+    int Numboftabs =2;
 
     private PowerService powerService;
     private BackgroundService backgroundService;
@@ -108,6 +121,40 @@ public class MainActivityFragment extends Fragment implements ColorMixer.OnColor
         barService = restUtil.buildService(BarsService.class);
         lampService = restUtil.buildService(LampService.class);
         ambientService = restUtil.buildService(AmbientService.class);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        // Creating The Toolbar and setting it as the Toolbar for the activity
+
+        AppCompatActivity activity = (AppCompatActivity) getActivity();
+
+        //toolbar = (Toolbar) activity.findViewById(R.id.tool_bar);
+        //activity.setSupportActionBar(toolbar);
+
+
+        // Creating The ViewPagerAdapter and Passing Fragment Manager, Titles fot the Tabs and Number Of Tabs.
+        adapter =  new ViewPagerAdapter(getActivity().getSupportFragmentManager(),Titles,Numboftabs);
+
+        // Assigning ViewPager View and setting the adapter
+        pager = (ViewPager) getActivity().findViewById(R.id.pager);
+        pager.setAdapter(adapter);
+
+        // Assiging the Sliding Tab Layout View
+        tabs = (SlidingTabLayout) getActivity().findViewById(R.id.tabs);
+        tabs.setDistributeEvenly(true); // To make the Tabs Fixed set this true, This makes the tabs Space Evenly in Available width
+
+        // Setting Custom Color for the Scroll bar indicator of the Tab View
+        tabs.setCustomTabColorizer(new SlidingTabLayout.TabColorizer() {
+            @Override
+            public int getIndicatorColor(int position) {
+                return getResources().getColor(R.color.tabsScrollColor);
+            }
+        });
+
+        // Setting the ViewPager For the SlidingTabsLayout
+        tabs.setViewPager(pager);
     }
 
     @DebugLog
@@ -137,7 +184,7 @@ public class MainActivityFragment extends Fragment implements ColorMixer.OnColor
 
     @DebugLog
     @AfterTextChange(R.id.tubeEditText)
-    void onTubeTextChange(CharSequence text) {
+    void onTubeTextChange(TextView view, Editable text) {
         tubesService.setTubes(new Tubes(text.toString()));
     }
 

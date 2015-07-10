@@ -5,4 +5,6 @@
     <color name="accent">#ffff7504</color>
 
     <color name = "hairlines">#C0C0C0</color>
+
+    <color name="tabsScrollColor">#004D40</color>
 </resources>
