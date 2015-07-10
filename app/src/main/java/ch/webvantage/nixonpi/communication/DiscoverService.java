@@ -1,10 +1,15 @@
 package ch.webvantage.nixonpi.communication;
 
+import android.app.IntentService;
+import android.content.Context;
+import android.content.Intent;
 import android.net.DhcpInfo;
 import android.net.wifi.WifiManager;
 import android.util.Log;
 
-import org.jetbrains.annotations.NotNull;
+import org.androidannotations.annotations.EIntentService;
+import org.androidannotations.annotations.ServiceAction;
+import org.androidannotations.annotations.sharedpreferences.Pref;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,52 +23,65 @@ import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 
+import ch.webvantage.nixonpi.MainPreferences_;
 import ch.webvantage.nixonpi.communication.model.NixonpiServer;
 import ch.webvantage.nixonpi.event.DiscoveryEvent;
 import de.greenrobot.event.EventBus;
+import hugo.weaving.DebugLog;
 
 /**
- * Created by dkummer on 24/06/15.
- * based on https://code.google.com/p/boxeeremote/source/browse/
+ * Created by dkummer on 01/07/15.
  */
-public class Discoverer extends Thread {
+@EIntentService
+public class DiscoverService extends IntentService {
 
-    private static final int TIMEOUT_MS = 500;
-    private static final String TAG = Discoverer.class.getName();
-    private static final int DISCOVERY_PORT = 1234;
-    private static final int REPLY_PORT = 1234;
+    private static final String TAG = DiscoverService.class.getName();
+
+    @Pref
+    MainPreferences_ prefs;
+
+
     private static final String TAG_ADDRESSES = "ip_addresses";
     private static final String TAG_PORT = "port";
 
-    private WifiManager wifi;
 
-    public Discoverer(@NotNull WifiManager wifi) {
-        this.wifi = wifi;
+    public DiscoverService() {
+        super(DiscoverService.class.getName());
     }
 
-    public void run() {
+    @Override
+    protected void onHandleIntent(Intent intent) {
+        // Do nothing here
+    }
+
+    @DebugLog
+    @ServiceAction
+    void discover() {
+
         List<NixonpiServer> servers = new ArrayList<>();
         try {
-            //DatagramSocket socket = new DatagramSocket(DISCOVERY_PORT);
             DatagramSocket socket = new DatagramSocket();
             socket.setBroadcast(true);
-            socket.setSoTimeout(TIMEOUT_MS);
+            socket.setSoTimeout(prefs.timeout().get());
 
             sendDiscoveryRequest(socket);
 
-            DatagramSocket responseSocket = new DatagramSocket(REPLY_PORT, InetAddress.getByName("0.0.0.0"));
+            DatagramSocket responseSocket = new DatagramSocket(prefs.replyPort().get(), InetAddress.getByName("0.0.0.0"));
             responseSocket.setBroadcast(true);
+            responseSocket.setSoTimeout(prefs.timeout().get());
 
             servers = listenForResponses(responseSocket);
             socket.close();
+            responseSocket.close();
         } catch (IOException e) {
             Log.e(TAG, "Could not send discovery request", e);
         } catch (JSONException e) {
             Log.e(TAG, "Error parsing JSON", e);
         }
         EventBus.getDefault().post(new DiscoveryEvent(servers));
-        //mReceiver.addAnnouncedServers(servers);
+
     }
+
 
     /**
      * Send a broadcast UDP packet containing a request for boxee services to
@@ -71,10 +89,11 @@ public class Discoverer extends Thread {
      *
      * @throws IOException
      */
+    @DebugLog
     private void sendDiscoveryRequest(DatagramSocket socket) throws IOException {
-        String data = String.format("{ \"cmd\":\"%s\", \"application\":\"nixonpi\", \"reply_port\":\"%d\" }", "discover", REPLY_PORT);
+        String data = String.format("{ \"cmd\":\"%s\", \"application\":\"nixonpi\", \"reply_port\":\"%d\" }", "discover", prefs.replyPort().get());
         Log.d(TAG, "Sending data " + data);
-        DatagramPacket packet = new DatagramPacket(data.getBytes(), data.length(), getBroadcastAddress(), DISCOVERY_PORT);
+        DatagramPacket packet = new DatagramPacket(data.getBytes(), data.length(), getBroadcastAddress(), prefs.discoveryPort().get());
         socket.send(packet);
         Log.d(TAG, "Broadcast packet sent to: " + getBroadcastAddress().getHostAddress());
 
@@ -85,7 +104,9 @@ public class Discoverer extends Thread {
      * to 255.255.255.255, it never gets sent. I guess this has something to do
      * with the mobile network not wanting to do broadcast.
      */
+    @DebugLog
     private InetAddress getBroadcastAddress() throws IOException {
+        WifiManager wifi = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         DhcpInfo dhcp = wifi.getDhcpInfo();
         if (dhcp == null) {
             Log.d(TAG, "Could not get DHCP info");
@@ -106,17 +127,19 @@ public class Discoverer extends Thread {
      * @return list of discovered servers, never null
      * @throws IOException
      */
+    @DebugLog
     private List<NixonpiServer> listenForResponses(DatagramSocket socket)
             throws IOException, JSONException {
         long start = System.currentTimeMillis();
         byte[] buf = new byte[1024];
         List<NixonpiServer> servers = new ArrayList<>();
 
+        boolean continueLoop = true;
         // Loop and try to receive responses until the timeout elapses. We'll get
         // back the packet we just sent out, which isn't terribly helpful, but we'll
         // discard it in parseResponse because the cmd is wrong.
         try {
-            while (true) {
+            while (continueLoop) {
                 DatagramPacket packet = new DatagramPacket(buf, buf.length);
                 socket.receive(packet);
                 String s = new String(packet.getData(), 0, packet.getLength());
@@ -124,16 +147,9 @@ public class Discoverer extends Thread {
                 NixonpiServer server = parseResponse(s, ((InetSocketAddress) packet.getSocketAddress()).getAddress());
                 if (server != null) {
                     servers.add(server);
+                    continueLoop = false;
                 }
-                /*
-                // Send the packet data back to the UI thread
-    Intent localIntent = new Intent(Constants.BROADCAST_ACTION)
-            // Puts the data into the Intent
-            .putExtra(Constants.EXTENDED_DATA_STATUS, data);
-    // Broadcasts the Intent to receivers in this app.
-    LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
-                 */
-
+                //TODO currently the service exits after timeout, we could directly exit here if a server is found
             }
         } catch (SocketTimeoutException e) {
             Log.d(TAG, "Receive timed out");
@@ -141,6 +157,7 @@ public class Discoverer extends Thread {
         return servers;
     }
 
+    @DebugLog
     private NixonpiServer parseResponse(String response, InetAddress address) throws JSONException {
         JSONObject jsonObj = new JSONObject(response);
         List<String> serverAddresses = new ArrayList<>();
@@ -157,5 +174,4 @@ public class Discoverer extends Thread {
         Log.d(TAG, "Discovered server " + server);
         return server;
     }
-
 }

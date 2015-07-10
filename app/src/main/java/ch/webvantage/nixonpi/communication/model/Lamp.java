@@ -1,13 +1,13 @@
 package ch.webvantage.nixonpi.communication.model;
 
 /**
- * Created by dkummer on 22/06/15.
+ * Created by dkummer on 06/07/15.
  */
-public class Power {
+public class Lamp {
 
     private boolean value;
 
-    public Power(boolean value) {
+    public Lamp(boolean value) {
         this.value = value;
     }
 

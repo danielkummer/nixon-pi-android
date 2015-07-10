@@ -25,7 +25,7 @@
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentTop="true"
                 android:ems="10"
-                android:hint="@string/server_edit_text_hint"
+                android:hint="Nothingatthemoment"
                 android:inputType="number"
                 android:digits="0123456789."
                 android:singleLine="true" />

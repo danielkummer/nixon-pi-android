@@ -5,6 +5,8 @@ import android.content.SharedPreferences;
 
 import org.androidannotations.annotations.EApplication;
 
+import ch.webvantage.nixonpi.communication.model.NixonpiServer;
+
 import static ch.webvantage.nixonpi.Constants.Preferences.*;
 
 /**
@@ -14,21 +16,19 @@ import static ch.webvantage.nixonpi.Constants.Preferences.*;
 @EApplication
 public class NixonPiApplication extends Application {
 
-
-    private SharedPreferences preferences;
-
+    NixonpiServer server;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        this.preferences = getSharedPreferences(PREFERENCES_NAME, MODE_PRIVATE);
+        server = NixonpiServer.createDummy();
     }
 
-
-
-    public SharedPreferences getPreferences() {
-        return preferences;
+    public NixonpiServer getServer() {
+        return server;
     }
 
-
+    public void setServer(NixonpiServer server) {
+        this.server = server;
+    }
 }

@@ -2,62 +2,53 @@ package ch.webvantage.nixonpi;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Context;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
+import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.App;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.OptionsItem;
 import org.androidannotations.annotations.OptionsMenu;
 
-import ch.webvantage.nixonpi.communication.Discoverer;
+import ch.webvantage.nixonpi.communication.DiscoverService_;
 import ch.webvantage.nixonpi.event.DiscoveryEvent;
-import ch.webvantage.nixonpi.event.NetworkStateChangedEvent;
+import ch.webvantage.nixonpi.event.NetworkStateEvent;
+import ch.webvantage.nixonpi.util.ConnectivityUtil;
 import de.greenrobot.event.EventBus;
+import hugo.weaving.DebugLog;
 
 
 @EActivity(R.layout.activity_main)
 @OptionsMenu(R.menu.menu_main)
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = MainActivity.class.getName();
+    @App
+    NixonPiApplication app;
 
-
-    Dialog alertDialog = null;
+    private Dialog noNetworkDialog;
+    private ProgressDialog discoverProgressDialog;
+    private AlertDialog retryDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        EventBus.getDefault().register(this); // register EventBus
+        discoverProgressDialog = createDiscoverDialog();
+        noNetworkDialog = createNoNetworkDialog();
+        retryDialog = createRetryDialog();
 
-        new Discoverer((WifiManager) getSystemService(Context.WIFI_SERVICE)).start();
+        EventBus.getDefault().register(this);
+    }
 
-
-
-        /*Log.d(TAG, "Fetching power value");
-        PowerService powerService = new RestAdapter.Builder()
-                .setLogLevel(RestAdapter.LogLevel.FULL)
-                .setEndpoint("http://10.0.2.2:8080").build()
-                .create(PowerService.class);
-
-        powerService.getPower(new Callback<Power>() {
-            @Override
-            public void success(Power power, Response response) {
-                    Log.d(TAG, response.toString());
-            }
-
-            @Override
-            public void failure(RetrofitError retrofitError) {
-                Log.d(TAG, "error", retrofitError);
-            }
-
-        });*/
-
+    @AfterViews
+    @DebugLog
+    protected void afterViews() {
+        EventBus.getDefault().post(ConnectivityUtil.getNetworkState(this));
     }
 
     @Override
@@ -66,9 +57,15 @@ public class MainActivity extends AppCompatActivity {
         EventBus.getDefault().unregister(this); // unregister EventBus
     }
 
+    @OptionsItem(R.id.action_discover)
+    void actionDiscover() {
+        startDiscovery();
+    }
+
     @OptionsItem(R.id.action_refresh)
     void actionRefresh() {
-        //TODO refresh stats
+        //TODO
+        Toast.makeText(this, "Not implemented yet", Toast.LENGTH_SHORT).show();
     }
 
     @OptionsItem(R.id.action_settings)
@@ -77,55 +74,78 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    // This method will be called when a MessageEvent is posted
-    public void onEventMainThread(DiscoveryEvent event) {
-        Toast.makeText(this, event.getServers().toString(), Toast.LENGTH_SHORT).show();
-    }
 
-    // method that will be called when someone posts an event NetworkStateChanged
-    public void onEventMainThread(NetworkStateChangedEvent event) {
-        if (!event.isInternetConnected()) {
-            //Toast.makeText(this, "No Internet connection!", Toast.LENGTH_SHORT).show();
-            alertDialog = createDialog("No Internet connection, please check...");
-            alertDialog.show();
-        } else if (!event.isWifi()) {
-            //Toast.makeText(this, "No WIFI connection!", Toast.LENGTH_SHORT).show();
-            alertDialog = createDialog("No WIFI connection, please enable WIFI...");
-            alertDialog.show();
+    @DebugLog
+    public void onEventMainThread(NetworkStateEvent event) {
+        if (event.isUsable()) {
+            if (noNetworkDialog.isShowing()) {
+                noNetworkDialog.cancel();
+            }
         } else {
-            alertDialog.cancel();
+            noNetworkDialog.show();
+            if (discoverProgressDialog.isShowing()) {
+                discoverProgressDialog.dismiss();
+            }
         }
     }
 
-
-    private AlertDialog createDialog(String message) {
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-        alertDialogBuilder.setTitle("Oops");
-
-        // set dialog message
-        alertDialogBuilder
-                .setMessage(message)
-                .setCancelable(false)
-                .setPositiveButton("Open Settings", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        // if this button is clicked, close
-                        // current activity
-                        //MainActivity.this.finish();
-                        Intent intent = new Intent(Intent.ACTION_MAIN);
-                        intent.setClassName("com.android.phone", "com.android.phone.NetworkSetting");
-                        startActivity(intent);
-                    }
-                });/*
-                .setNegativeButton("No",new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog,int id) {
-                        // if this button is clicked, just close
-                        // the dialog box and do nothing
-                        dialog.cancel();
-                    }
-                });*/
-
-        return alertDialogBuilder.create();
+    @DebugLog
+    public void onEventMainThread(DiscoveryEvent event) {
+        if (discoverProgressDialog.isShowing()) {
+            discoverProgressDialog.dismiss();
+        }
+        if (event.getServers().isEmpty()) {
+            retryDialog.show();
+        } else {
+            app.setServer(event.getServers().get(0));
+        }
     }
 
+    private void startDiscovery() {
+        if (ConnectivityUtil.getNetworkState(this).isUsable()) {
+            DiscoverService_.intent(this).discover().start();
+            discoverProgressDialog.show();
+        } else {
+            noNetworkDialog.show();
+        }
+    }
 
+    private ProgressDialog createDiscoverDialog() {
+        ProgressDialog dialog = new ProgressDialog(this);
+        dialog.setCancelable(false);
+        dialog.setIndeterminate(true);
+        dialog.setTitle("Searching Nixon-\u03C0");
+        return dialog;
+    }
+
+    private AlertDialog createNoNetworkDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder
+                .setTitle("Oops")
+                .setMessage("No WIFI connection, please check...")
+                .setCancelable(true)
+                .setPositiveButton("Open Settings", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        Intent intent = new Intent(Intent.ACTION_MAIN);
+                        intent.setClassName("com.android.settings", "com.android.settings.wifi.WifiSettings");
+                        startActivity(intent);
+                    }
+                });
+        return builder.create();
+    }
+
+    private AlertDialog createRetryDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder
+                .setTitle("Discovery failed")
+                .setMessage("Nixon-\u03C0 not found - retry?")
+                .setCancelable(true)
+                .setPositiveButton("Retry", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        startDiscovery();
+                        dialog.dismiss();
+                    }
+                });
+        return builder.create();
+    }
 }

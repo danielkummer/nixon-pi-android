@@ -4,8 +4,13 @@
     tools:context=".MainActivity">
 
     <item
+        android:id="@+id/action_discover"
+        android:icon="@drawable/ic_action_discover"
+        android:title="@string/action_discover"
+        app:showAsAction="ifRoom|withText" />
+    <item
         android:id="@+id/action_refresh"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/ic_action_refresh"
         android:title="@string/action_refresh"
         app:showAsAction="ifRoom|withText" />
 

@@ -1,5 +1,6 @@
 package ch.webvantage.nixonpi.communication.model;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 
 /**
@@ -30,6 +31,10 @@ public class NixonpiServer {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public static NixonpiServer createDummy() {
+        return new NixonpiServer(InetAddress.getLoopbackAddress(), 1234);
     }
 
     @Override

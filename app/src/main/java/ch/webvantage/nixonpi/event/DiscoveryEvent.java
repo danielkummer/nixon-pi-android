@@ -18,4 +18,12 @@ public class DiscoveryEvent {
     public List<NixonpiServer> getServers() {
         return servers;
     }
+
+    public boolean hasServers() {
+        return !servers.isEmpty();
+    }
+
+    public NixonpiServer getFirstServer() {
+        return servers.get(0);
+    }
 }

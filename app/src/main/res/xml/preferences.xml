@@ -4,4 +4,22 @@
         android:key="apiEndpoint"
         android:summary="Please provide the server address"></EditTextPreference>
 
+    <EditTextPreference android:title="Discovery Timeout"
+        android:key="discoveryTimeout"
+        android:numeric="integer"
+        android:defaultValue="500"
+        android:summary="Set the discovery timout in ms"></EditTextPreference>
+
+    <EditTextPreference android:title="Discovery Port"
+        android:key="discoveryPort"
+        android:numeric="integer"
+        android:defaultValue="1234"
+        android:summary="Set the discovery port"></EditTextPreference>
+
+    <EditTextPreference android:title="Reply Port"
+        android:key="replyPort"
+        android:numeric="integer"
+        android:defaultValue="1234"
+        android:summary="Set the reply port"></EditTextPreference>
+
 </PreferenceScreen>
