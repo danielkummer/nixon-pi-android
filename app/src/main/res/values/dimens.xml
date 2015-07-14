@@ -7,4 +7,6 @@
     <dimen name = "divider_default">1dp</dimen>
     <dimen name="toggle_btn_lamp_width">65dp</dimen>
 
+    <dimen name="activity_tabs_default_padding">10dp</dimen>
+
 </resources>

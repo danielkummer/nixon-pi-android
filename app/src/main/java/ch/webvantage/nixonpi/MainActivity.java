@@ -6,30 +6,61 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.App;
+import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.OptionsItem;
-import org.androidannotations.annotations.OptionsMenu;
+import org.androidannotations.annotations.ViewById;
 
+import ch.webvantage.nixonpi.adapter.TabViewPagerAdapter;
 import ch.webvantage.nixonpi.communication.DiscoverService_;
+import ch.webvantage.nixonpi.communication.PowerService;
+import ch.webvantage.nixonpi.communication.RestUtil;
+import ch.webvantage.nixonpi.communication.model.Power;
 import ch.webvantage.nixonpi.event.DiscoveryEvent;
 import ch.webvantage.nixonpi.event.NetworkStateEvent;
+import ch.webvantage.nixonpi.ui.widget.SlidingTabLayout;
 import ch.webvantage.nixonpi.util.ConnectivityUtil;
 import de.greenrobot.event.EventBus;
 import hugo.weaving.DebugLog;
 
+import static android.widget.CompoundButton.OnCheckedChangeListener;
+
 
 @EActivity(R.layout.activity_main)
-@OptionsMenu(R.menu.menu_main)
 public class MainActivity extends AppCompatActivity {
+
+    private static final String TAG = MainActivity.class.getName();
 
     @App
     NixonPiApplication app;
+
+
+    @ViewById(R.id.tabPager)
+    ViewPager pager;
+
+    @ViewById
+    SlidingTabLayout tabs;
+
+    @Bean
+    RestUtil restUtil;
+
+
+    Switch powerToggle;
+
+
+    TabViewPagerAdapter adapter;
+
+    private PowerService powerService;
 
     private Dialog noNetworkDialog;
     private ProgressDialog discoverProgressDialog;
@@ -46,10 +77,50 @@ public class MainActivity extends AppCompatActivity {
         EventBus.getDefault().register(this);
     }
 
+    private void initServices() {
+        powerService = restUtil.buildService(PowerService.class);
+    }
+
     @AfterViews
     @DebugLog
     protected void afterViews() {
+
+        adapter = new TabViewPagerAdapter(getSupportFragmentManager());
+        pager.setAdapter(adapter);
+
+
+        tabs = (SlidingTabLayout) findViewById(R.id.tabs);
+        tabs.setDistributeEvenly(true); // To make the Tabs Fixed set this true, This makes the tabs Space Evenly in Available width
+
+        // Setting Custom Color for the Scroll bar indicator of the Tab View
+        tabs.setCustomTabColorizer(new SlidingTabLayout.TabColorizer() {
+            @Override
+            public int getIndicatorColor(int position) {
+                return getResources().getColor(R.color.tabsScrollColor);
+            }
+        });
+        tabs.setViewPager(pager);
         EventBus.getDefault().post(ConnectivityUtil.getNetworkState(this));
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(ch.webvantage.nixonpi.R.menu.menu_main, menu);
+        final MenuItem powerToggleMenuItem = menu.findItem(R.id.action_switch_power);
+
+        powerToggle = (Switch) powerToggleMenuItem.getActionView().findViewById(R.id.togglePower);
+        powerToggle.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+            @Override
+            @DebugLog
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                powerService.setPower(new Power(isChecked));
+            }
+        });
+
+        setInputEnabled(false);
+
+        return super.onCreateOptionsMenu(menu);
+
     }
 
     @Override
@@ -75,13 +146,13 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-
     @DebugLog
     public void onEventMainThread(NetworkStateEvent event) {
         if (event.isUsable()) {
             if (noNetworkDialog.isShowing()) {
                 noNetworkDialog.cancel();
             }
+
         } else {
             noNetworkDialog.show();
             if (discoverProgressDialog.isShowing()) {
@@ -95,10 +166,18 @@ public class MainActivity extends AppCompatActivity {
         if (discoverProgressDialog.isShowing()) {
             discoverProgressDialog.dismiss();
         }
-        if (event.getServers().isEmpty()) {
-            retryDialog.show();
+        if (event.hasServers()) {
+            setInputEnabled(true);
+            initServices();
         } else {
-            app.setServer(event.getServers().get(0));
+            retryDialog.show();
+            setInputEnabled(false);
+        }
+    }
+
+    private void setInputEnabled(boolean enabled) {
+        if (powerToggle != null) {
+            powerToggle.setEnabled(enabled);
         }
     }
 

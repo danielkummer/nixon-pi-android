@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="@dimen/activity_tabs_default_padding">
+
+    <TextView
+        android:id="@+id/textViewLamps"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/lamps_text"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <ToggleButton
+            android:id="@+id/toggleButtonLamp0"
+            android:layout_width="@dimen/toggle_btn_lamp_width"
+            android:layout_height="wrap_content" />
+
+        <ToggleButton
+            android:id="@+id/toggleButtonLamp1"
+            android:layout_width="@dimen/toggle_btn_lamp_width"
+            android:layout_height="wrap_content" />
+
+        <ToggleButton
+            android:id="@+id/toggleButtonLamp2"
+            android:layout_width="@dimen/toggle_btn_lamp_width"
+            android:layout_height="wrap_content" />
+
+        <ToggleButton
+            android:id="@+id/toggleButtonLamp3"
+            android:layout_width="@dimen/toggle_btn_lamp_width"
+            android:layout_height="wrap_content" />
+
+        <!-- TODO not visible! -->
+        <ToggleButton
+            android:id="@+id/toggleButtonLamp4"
+            android:layout_width="@dimen/toggle_btn_lamp_width"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+</LinearLayout>

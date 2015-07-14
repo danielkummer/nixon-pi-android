@@ -4,6 +4,14 @@
     tools:context=".MainActivity">
 
     <item
+        android:id="@+id/action_switch_power"
+        android:title="@string/power_text"
+        app:showAsAction="always"
+        app:actionLayout="@layout/action_bar_switch"
+        />
+
+        <!--android:actionViewClass="android.widget.Switch"-->
+    <item
         android:id="@+id/action_discover"
         android:icon="@drawable/ic_action_discover"
         android:title="@string/action_discover"
