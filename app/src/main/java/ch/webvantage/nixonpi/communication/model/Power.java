@@ -5,17 +5,26 @@ package ch.webvantage.nixonpi.communication.model;
  */
 public class Power {
 
-    private boolean value;
+    private int value;
+
+    public Power(int value) {
+        this.value = value;
+    }
 
     public Power(boolean value) {
+        this.value = value ? 1 : 0;
+    }
+
+    public void setValue(int value) {
         this.value = value;
     }
 
-    public boolean isValue() {
-        return value;
+    public boolean hasPower() {
+        return value == 1;
     }
 
-    public void setValue(boolean value) {
-        this.value = value;
+    @Override
+    public String toString() {
+        return value == 1 ? "on" : "off";
     }
 }

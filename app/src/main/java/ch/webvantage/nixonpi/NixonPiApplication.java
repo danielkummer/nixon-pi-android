@@ -16,16 +16,19 @@ import static ch.webvantage.nixonpi.Constants.Preferences.*;
 @EApplication
 public class NixonPiApplication extends Application {
 
-    NixonpiServer server;
+    NixonpiServer server = null;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        server = NixonpiServer.createDummy();
     }
 
     public NixonpiServer getServer() {
         return server;
+    }
+
+    public boolean hasServer() {
+        return server != null;
     }
 
     public void setServer(NixonpiServer server) {

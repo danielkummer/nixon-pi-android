@@ -2,7 +2,10 @@ package ch.webvantage.nixonpi.communication;
 
 import ch.webvantage.nixonpi.communication.model.AmbientColor;
 import ch.webvantage.nixonpi.communication.model.Lamp;
+import retrofit.Callback;
 import retrofit.http.Body;
+import retrofit.http.Field;
+import retrofit.http.FormUrlEncoded;
 import retrofit.http.POST;
 
 /**
@@ -12,7 +15,8 @@ public interface AmbientService {
 
 
 
-    @POST("/rgb.json")
-    AmbientColor setAmbientColor(@Body AmbientColor ambientColor);
+    @POST("/rgb")
+    @FormUrlEncoded
+    void setAmbientColor(@Field("value") String value, Callback<AmbientColor> callback);
 
 }

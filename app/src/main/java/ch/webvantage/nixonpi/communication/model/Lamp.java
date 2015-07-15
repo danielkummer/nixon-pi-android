@@ -5,17 +5,47 @@ package ch.webvantage.nixonpi.communication.model;
  */
 public class Lamp {
 
-    private boolean value;
+    private int value;
+    private String state = "free_value";
+    private int id;
 
-    public Lamp(boolean value) {
+
+    public Lamp(int id, int value) {
+        this.id = id;
         this.value = value;
     }
 
-    public boolean isValue() {
+    public Lamp(int id,  boolean value) {
+        this.id = id;
+        this.value = value ? 1 : 0;
+    }
+
+    public boolean isOn() {
+        return value == 1;
+    }
+
+    public void setValue(int value) {
+        this.value = value;
+    }
+
+    public int getValue() {
         return value;
     }
 
-    public void setValue(boolean value) {
-        this.value = value;
+    public String getState() {
+        return state;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    @Override
+    public String toString() {
+        return value == 1 ? "on" : "off";
     }
 }

@@ -3,9 +3,11 @@ package ch.webvantage.nixonpi.ui.tabs;
 import android.support.v4.app.Fragment;
 
 import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.App;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EFragment;
 
+import ch.webvantage.nixonpi.NixonPiApplication;
 import ch.webvantage.nixonpi.communication.AmbientService;
 import ch.webvantage.nixonpi.communication.BackgroundService;
 import ch.webvantage.nixonpi.communication.BarsService;
@@ -24,6 +26,9 @@ public abstract class BaseFragment extends Fragment {
 
     @Bean
     RestUtil restUtil;
+
+    @App
+    NixonPiApplication app;
 
     protected BackgroundService backgroundService;
     protected TubesService tubesService;
@@ -49,13 +54,16 @@ public abstract class BaseFragment extends Fragment {
         } else {
             setInputEnabled(false);
         }
-
     }
 
     @AfterViews
     @DebugLog
     void calledAfterViewInjection() {
         EventBus.getDefault().register(this); // register EventBus
-        setInputEnabled(false);
+        boolean hasServer = app.hasServer();
+        setInputEnabled(hasServer);
+        if (hasServer) {
+            initServices();
+        }
     }
 }

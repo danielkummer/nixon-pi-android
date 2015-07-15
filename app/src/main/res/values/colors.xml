@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#f03737</color>
-    <color name="primary_dark">#ff6e1b1b</color>
+    <color name="primary">#ff6e1b1b</color>
+    <color name="primary_dark">#ff3f1010</color>
     <color name="accent">#ffff7504</color>
 
     <color name = "hairlines">#C0C0C0</color>
 
-    <color name="tabsScrollColor">#004D40</color>
+    <color name="tabsScrollColor">#C0C0C0</color>
 </resources>

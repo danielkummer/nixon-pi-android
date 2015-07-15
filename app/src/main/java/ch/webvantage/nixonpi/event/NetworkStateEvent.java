@@ -1,5 +1,7 @@
 package ch.webvantage.nixonpi.event;
 
+import ch.webvantage.nixonpi.util.EmulatorUtil;
+
 /**
  * Created by dkummer on 22/06/15.
  */
@@ -14,6 +16,6 @@ public class NetworkStateEvent {
     }
 
     public boolean isUsable() {
-        return isInternetConnected && isWifi;
+        return (isInternetConnected && isWifi) || (isInternetConnected && EmulatorUtil.isEmulator());
     }
 }

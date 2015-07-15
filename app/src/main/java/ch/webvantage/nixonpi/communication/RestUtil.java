@@ -24,10 +24,15 @@ public class RestUtil {
 
     private static final String TAG = DiscoverService.class.getName();
 
-    public <T> T buildService(Class<T> serviceInterface) {
+    public <T> T buildService(Class<T> serviceInterface) throws RuntimeException {
+        if(app.getServer() == null) {
+           throw new RuntimeException("Remote server is null");
+        }
+
         T service = new RestAdapter.Builder()
                 .setLogLevel(RestAdapter.LogLevel.FULL)
-                .setEndpoint("http://" + app.getServer().toString()).build()
+                .setEndpoint("http://" + app.getServer().toString())
+                .build()
                 .create(serviceInterface);
         return service;
     }

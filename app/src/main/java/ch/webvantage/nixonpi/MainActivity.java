@@ -3,11 +3,14 @@ package ch.webvantage.nixonpi;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.CompoundButton;
@@ -22,6 +25,7 @@ import org.androidannotations.annotations.OptionsItem;
 import org.androidannotations.annotations.ViewById;
 
 import ch.webvantage.nixonpi.adapter.TabViewPagerAdapter;
+import ch.webvantage.nixonpi.communication.DefaultCallback;
 import ch.webvantage.nixonpi.communication.DiscoverService_;
 import ch.webvantage.nixonpi.communication.PowerService;
 import ch.webvantage.nixonpi.communication.RestUtil;
@@ -32,6 +36,9 @@ import ch.webvantage.nixonpi.ui.widget.SlidingTabLayout;
 import ch.webvantage.nixonpi.util.ConnectivityUtil;
 import de.greenrobot.event.EventBus;
 import hugo.weaving.DebugLog;
+import retrofit.Callback;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 
 import static android.widget.CompoundButton.OnCheckedChangeListener;
 
@@ -88,9 +95,9 @@ public class MainActivity extends AppCompatActivity {
         adapter = new TabViewPagerAdapter(getSupportFragmentManager());
         pager.setAdapter(adapter);
 
-
         tabs = (SlidingTabLayout) findViewById(R.id.tabs);
-        tabs.setDistributeEvenly(true); // To make the Tabs Fixed set this true, This makes the tabs Space Evenly in Available width
+        // To make the Tabs Fixed set this true, This makes the tabs Space Evenly in Available width
+        tabs.setDistributeEvenly(true);
 
         // Setting Custom Color for the Scroll bar indicator of the Tab View
         tabs.setCustomTabColorizer(new SlidingTabLayout.TabColorizer() {
@@ -108,19 +115,29 @@ public class MainActivity extends AppCompatActivity {
         getMenuInflater().inflate(ch.webvantage.nixonpi.R.menu.menu_main, menu);
         final MenuItem powerToggleMenuItem = menu.findItem(R.id.action_switch_power);
 
+        final Context context = this;
+
         powerToggle = (Switch) powerToggleMenuItem.getActionView().findViewById(R.id.togglePower);
         powerToggle.setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
             @DebugLog
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                powerService.setPower(new Power(isChecked));
+            public void onCheckedChanged(final CompoundButton buttonView, boolean isChecked) {
+
+                int value = isChecked ? 1 : 0;
+
+                powerService.setPower(value, new DefaultCallback<Power>(context) {
+                    @Override
+                    public void success(Power power, Response response) {
+                        Snackbar
+                                .make(pager, "Set power to " + power.toString(), Snackbar.LENGTH_LONG)
+                                .show();
+                    }
+                });
             }
         });
 
         setInputEnabled(false);
-
         return super.onCreateOptionsMenu(menu);
-
     }
 
     @Override
@@ -167,6 +184,7 @@ public class MainActivity extends AppCompatActivity {
             discoverProgressDialog.dismiss();
         }
         if (event.hasServers()) {
+            app.setServer(event.getFirstServer());
             setInputEnabled(true);
             initServices();
         } else {

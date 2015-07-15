@@ -17,15 +17,18 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
 import ch.webvantage.nixonpi.MainPreferences_;
 import ch.webvantage.nixonpi.communication.model.NixonpiServer;
 import ch.webvantage.nixonpi.event.DiscoveryEvent;
+import ch.webvantage.nixonpi.util.EmulatorUtil;
 import de.greenrobot.event.EventBus;
 import hugo.weaving.DebugLog;
 
@@ -57,8 +60,20 @@ public class DiscoverService extends IntentService {
     @DebugLog
     @ServiceAction
     void discover() {
-
         List<NixonpiServer> servers = new ArrayList<>();
+
+        //TODO rewrite this hack
+        if (EmulatorUtil.isEmulator()) {
+            byte[] address = new byte[]{10,0,2,2};
+            try {
+                servers.add(new NixonpiServer(InetAddress.getByAddress(address), 8080));
+                EventBus.getDefault().post(new DiscoveryEvent(servers));
+                return;
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+        }
+
         try {
             DatagramSocket socket = new DatagramSocket();
             socket.setBroadcast(true);

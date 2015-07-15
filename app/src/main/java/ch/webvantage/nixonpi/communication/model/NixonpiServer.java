@@ -2,6 +2,7 @@ package ch.webvantage.nixonpi.communication.model;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 /**
  * Created by dkummer on 24/06/15.
@@ -10,7 +11,6 @@ public class NixonpiServer {
 
     private InetAddress addr;
     private int port;
-
 
     public NixonpiServer(InetAddress addr, int port) {
         this.addr = addr;
@@ -31,10 +31,6 @@ public class NixonpiServer {
 
     public void setPort(int port) {
         this.port = port;
-    }
-
-    public static NixonpiServer createDummy() {
-        return new NixonpiServer(InetAddress.getLoopbackAddress(), 1234);
     }
 
     @Override

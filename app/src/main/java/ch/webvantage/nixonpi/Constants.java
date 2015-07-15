@@ -10,4 +10,8 @@ public interface Constants {
         String PREFERENCE_API_ENDPOINT = "api_endpoint";
         String ACTION_SAVE_SETTINGS_SUCCESS = "ch.webvantage.nixonpi.Constants.Preferences.ACTION_SAVE_SETTINGS_SUCCESS";
     }
+
+    interface States {
+        String FREE_VALUE = "free_value";
+    }
 }
