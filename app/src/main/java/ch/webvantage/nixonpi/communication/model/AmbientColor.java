@@ -14,7 +14,6 @@ public class AmbientColor {
     }
 
     public AmbientColor(int color) {
-        //TODO convert color to hex string without alpha channel
         value = String.format("#%2X%2X%2X", Color.red(color), Color.green(color), Color.blue(color));
     }
 

@@ -3,9 +3,11 @@ package ch.webvantage.nixonpi;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.view.ViewPager;
@@ -32,6 +34,7 @@ import ch.webvantage.nixonpi.communication.RestUtil;
 import ch.webvantage.nixonpi.communication.model.Power;
 import ch.webvantage.nixonpi.event.DiscoveryEvent;
 import ch.webvantage.nixonpi.event.NetworkStateEvent;
+import ch.webvantage.nixonpi.receiver.ConnectivityReceiver;
 import ch.webvantage.nixonpi.ui.widget.SlidingTabLayout;
 import ch.webvantage.nixonpi.util.ConnectivityUtil;
 import de.greenrobot.event.EventBus;
@@ -72,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
     private Dialog noNetworkDialog;
     private ProgressDialog discoverProgressDialog;
     private AlertDialog retryDialog;
+    private final BroadcastReceiver connectivityReceiver = new ConnectivityReceiver();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,8 +88,18 @@ public class MainActivity extends AppCompatActivity {
         EventBus.getDefault().register(this);
     }
 
-    private void initServices() {
-        powerService = restUtil.buildService(PowerService.class);
+    @Override
+    public void onResume()
+    {
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
+        registerReceiver(connectivityReceiver, filter);
+    }
+
+    @Override
+    public void onPause()
+    {
+        unregisterReceiver(connectivityReceiver);
     }
 
     @AfterViews
@@ -138,6 +152,10 @@ public class MainActivity extends AppCompatActivity {
 
         setInputEnabled(false);
         return super.onCreateOptionsMenu(menu);
+    }
+
+    private void initServices() {
+        powerService = restUtil.buildService(PowerService.class);
     }
 
     @Override
